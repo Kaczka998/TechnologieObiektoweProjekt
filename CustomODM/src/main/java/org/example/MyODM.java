@@ -1,57 +1,72 @@
 package org.example;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.*;
 import java.util.*;
-
 import org.json.simple.*;
 
 public class MyODM {
 
-//    public static String toJSON(Object object) throws IllegalAccessException {
-//        Map<String, Object> jsonMap = new HashMap<>();
-//        Field[] fields = object.getClass().getDeclaredFields();
-//        for (Field field : fields) {
-//            field.setAccessible(true);
-//            String fieldName = field.getName();
-//            Object fieldValue = field.get(object);
-//            JSONProperty jsonProperty = field.getAnnotation(JSONProperty.class);
-//            if (jsonProperty != null) {
-//                fieldName = jsonProperty.name();
-//            }
-//            jsonMap.put(fieldName, fieldValue);
-//        }
-//        return JSONValue.toJSONString(jsonMap);
-//    }
-public static String toJSON(Object object) throws IllegalAccessException {
-    Map<String, Object> jsonMap = new HashMap<>();
-    Field[] fields = object.getClass().getDeclaredFields();
-    for (Field field : fields) {
-        field.setAccessible(true);
-        String fieldName = field.getName();
-        Object fieldValue = field.get(object);
-        JSONProperty jsonProperty = field.getAnnotation(JSONProperty.class);
-        if (jsonProperty != null) {
-            fieldName = jsonProperty.name();
+    public static Map<String, Object> toJsonMap(Object object) throws IllegalAccessException {
+        Map<String, Object> jsonMap = new HashMap<>();
+        Field[] fields = object.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            Type fieldType = field.getGenericType();
+            if (fieldType instanceof ParameterizedType) {
+                ParameterizedType parameterizedType = (ParameterizedType) fieldType;
+                if (parameterizedType.getRawType() == List.class && parameterizedType.getActualTypeArguments()[0] == String.class) {
+                    // handle List<String> separately
+                    field.setAccessible(true);
+                    List<?> list = (List<?>) field.get(object);
+                    jsonMap.put(field.getName(), list);
+                    continue;
+                }
+            }
+
+            field.setAccessible(true);
+            String fieldName = field.getName();
+            Object fieldValue = field.get(object);
+            JSONProperty jsonProperty = field.getAnnotation(JSONProperty.class);
+            if (jsonProperty != null && !jsonProperty.name().isEmpty()) {
+                fieldName += "." + jsonProperty.name();
+            }
+            if (field.getType().isArray()) {
+                // handle arrays
+                Object[] array = (Object[]) fieldValue;
+                List<Object> list = new ArrayList<>(Arrays.asList(array));
+                jsonMap.put(fieldName, toJSON(list));
+            } else if (field.getType().equals(List.class) && isListOfObjects(field)) {
+                List<?> list = (List<?>) fieldValue;
+                if (list != null) {
+                    jsonMap.put(fieldName, toJSON(list));
+                }
+            } else if (Collection.class.isAssignableFrom(field.getType())) {
+                // handle collections
+                Collection<?> collection = (Collection<?>) fieldValue;
+                if (collection != null) {
+                    jsonMap.put(fieldName, toJSON(collection));
+                }
+            } else if (field.getType().isPrimitive() || field.getType().equals(String.class)) {
+                // handle primitives and Strings
+                jsonMap.put(fieldName, fieldValue);
+            } else {
+                // handle objects
+                String nestedJson = toJSON(fieldValue);
+                jsonMap.put(fieldName, JSONValue.parse(nestedJson));
+            }
         }
-        if (field.getType().isArray()) {
-            // handle arrays
-            Object[] array = (Object[]) fieldValue;
-            List<Object> list = new ArrayList<>(Arrays.asList(array));
-            jsonMap.put(fieldName, toJSON(list));
-        } else if (Collection.class.isAssignableFrom(field.getType())) {
-            // handle collections
-            Collection<?> collection = (Collection<?>) fieldValue;
-            jsonMap.put(fieldName, toJSON(collection));
-        } else if (field.getType().isPrimitive() || field.getType().equals(String.class)) {
-            // handle primitives and Strings
-            jsonMap.put(fieldName, fieldValue);
-        } else {
-            // handle objects
-            jsonMap.put(fieldName, toJSON(fieldValue));
-        }
+        return jsonMap;
     }
-    return JSONValue.toJSONString(jsonMap);
-}
+    public static String toJSON(Object object) throws IllegalAccessException {
+        return JSONValue.toJSONString(toJsonMap(object));
+    }
+
+    public static String toJSON(List<?> objects) throws IllegalAccessException {
+        List<Map<String, Object>> jsonList = new ArrayList<>();
+        for (Object object : objects) {
+            jsonList.add(toJsonMap(object));
+        }
+        return JSONValue.toJSONString(jsonList);
+    }
 
     private static String toJSON(Collection<?> collection) throws IllegalAccessException {
         List<Object> list = new ArrayList<>();
@@ -61,4 +76,16 @@ public static String toJSON(Object object) throws IllegalAccessException {
         return JSONValue.toJSONString(list);
     }
 
+    private static boolean isListOfObjects(Field field) {
+        Type fieldType = field.getGenericType();
+        if (fieldType instanceof ParameterizedType) {
+            ParameterizedType parameterizedType = (ParameterizedType) fieldType;
+            Type[] typeArguments = parameterizedType.getActualTypeArguments();
+            if (typeArguments.length > 0) {
+                Type typeArgument = typeArguments[0];
+                return typeArgument instanceof Class;
+            }
+        }
+        return false;
+    }
 }
