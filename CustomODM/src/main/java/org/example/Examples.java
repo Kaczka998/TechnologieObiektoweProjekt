@@ -48,13 +48,25 @@ public class Examples {
         @JSONProperty
         private List<Address> addresses;
 
+        public String getName() {
+            return this.name;
+        }
+
+        public int getAge() {
+            return this.age;
+        }
+
+        public List<Address> getAddresses() {
+            return this.addresses;
+        }
+        public Person() {
+        }
+
         public Person(String name, int age, List<Address> addresses) {
             this.name = name;
             this.age = age;
             this.addresses = addresses;
         }
-
-        // Getters and setters
 
         public static class Address {
             @JSONProperty
@@ -65,6 +77,25 @@ public class Examples {
             private String state;
             @JSONProperty
             private String postalCode;
+
+            public String getStreet() {
+                return this.street;
+            }
+
+            public String getCity() {
+                return this.city;
+            }
+
+            public String getState() {
+                return this.state;
+            }
+
+            public String getPostalCode() {
+                return this.postalCode;
+            }
+            public Address(){
+
+            }
 
             public Address(String street, String city, String state, String postalCode) {
                 this.street = street;
