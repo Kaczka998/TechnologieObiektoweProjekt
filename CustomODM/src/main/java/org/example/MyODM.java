@@ -57,7 +57,8 @@ public class MyODM {
         return jsonMap;
     }
     public static String toJSON(Object object) throws IllegalAccessException {
-        return JSONValue.toJSONString(toJsonMap(object));
+        String result = JSONValue.toJSONString(toJsonMap(object));
+        return filterJSONString(result);
     }
 
     public static String toJSON(List<?> objects) throws IllegalAccessException {
@@ -65,7 +66,7 @@ public class MyODM {
         for (Object object : objects) {
             jsonList.add(toJsonMap(object));
         }
-        return JSONValue.toJSONString(jsonList);
+        return filterJSONString(JSONValue.toJSONString(jsonList));
     }
 
     private static String toJSON(Collection<?> collection) throws IllegalAccessException {
@@ -73,7 +74,7 @@ public class MyODM {
         for (Object obj : collection) {
             list.add(toJSON(obj));
         }
-        return JSONValue.toJSONString(list);
+        return filterJSONString(JSONValue.toJSONString(list));
     }
 
     private static boolean isListOfObjects(Field field) {
@@ -87,5 +88,12 @@ public class MyODM {
             }
         }
         return false;
+    }
+
+    private static String filterJSONString (String rawJsonString){
+        String result = rawJsonString.replace("\\", "");
+        result = result.replace("\"[", "[");
+        result = result.replace("]\"", "]");
+        return result;
     }
 }
