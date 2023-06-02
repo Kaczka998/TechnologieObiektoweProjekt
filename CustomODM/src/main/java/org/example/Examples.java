@@ -14,9 +14,6 @@ public class Examples {
         @JSONProperty
         private Engine engine;
 
-        public List<String> getFeatures() {
-            return this.features;
-        }
         public Car(String make, String model, int year, List<String> features, Engine engine) {
             this.make = make;
             this.model = model;
@@ -25,7 +22,49 @@ public class Examples {
             this.engine = engine;
         }
 
+        public Car() {
+            // Default constructor
+        }
+
         // Getters and setters
+        public String getMake() {
+            return make;
+        }
+
+        public void setMake(String make) {
+            this.make = make;
+        }
+
+        public String getModel() {
+            return model;
+        }
+
+        public void setModel(String model) {
+            this.model = model;
+        }
+
+        public int getYear() {
+            return year;
+        }
+
+        public void setYear(int year) {
+            this.year = year;
+        }
+
+        public List<String> getFeatures() {
+            return features;
+        }
+        public void setFeatures(List<String> features) {
+            this.features = features;
+        }
+
+        public Engine getEngine() {
+            return engine;
+        }
+
+        public void setEngine(Engine engine) {
+            this.engine = engine;
+        }
 
         public static class Engine {
             private String type;
@@ -36,7 +75,25 @@ public class Examples {
                 this.displacement = displacement;
             }
 
+            public Engine(){
+                // Default constructor
+            }
             // Getters and setters
+            public String getType() {
+                return type;
+            }
+
+            public void setType(String type) {
+                this.type = type;
+            }
+
+            public double getDisplacement() {
+                return displacement;
+            }
+
+            public void setDisplacement(double displacement) {
+                this.displacement = displacement;
+            }
         }
     }
 
