@@ -3,19 +3,19 @@ package org.example;
 import java.util.List;
 public class Examples {
     public static class Car {
-        @JSONProperty
-        private String make;
-        @JSONProperty
+
+        private String company;
+
         private String model;
-        @JSONProperty
+
         private int year;
-        @JSONProperty
+
         private List<String> features;
-        @JSONProperty
+
         private Engine engine;
 
-        public Car(String make, String model, int year, List<String> features, Engine engine) {
-            this.make = make;
+        public Car(String company, String model, int year, List<String> features, Engine engine) {
+            this.company = company;
             this.model = model;
             this.year = year;
             this.features = features;
@@ -27,12 +27,12 @@ public class Examples {
         }
 
         // Getters and setters
-        public String getMake() {
-            return make;
+        public String getCompany() {
+            return company;
         }
 
-        public void setMake(String make) {
-            this.make = make;
+        public void setCompany(String company) {
+            this.company = company;
         }
 
         public String getModel() {
@@ -98,11 +98,11 @@ public class Examples {
     }
 
     public static class Person {
-        @JSONProperty
+
         private String name;
-        @JSONProperty
+
         private int age;
-        @JSONProperty
+
         private List<Address> addresses;
 
         public String getName() {
@@ -126,13 +126,13 @@ public class Examples {
         }
 
         public static class Address {
-            @JSONProperty
+
             private String street;
-            @JSONProperty
+
             private String city;
-            @JSONProperty
+
             private String state;
-            @JSONProperty
+
             private String postalCode;
 
             public String getStreet() {

@@ -25,10 +25,6 @@ public class MyODM {
             field.setAccessible(true);
             String fieldName = field.getName();
             Object fieldValue = field.get(object);
-            JSONProperty jsonProperty = field.getAnnotation(JSONProperty.class);
-            if (jsonProperty != null && !jsonProperty.name().isEmpty()) {
-                fieldName += "." + jsonProperty.name();
-            }
             if (field.getType().isArray()) {
                 // handle arrays
                 Object[] array = (Object[]) fieldValue;
