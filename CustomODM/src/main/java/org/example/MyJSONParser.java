@@ -16,6 +16,11 @@ public class MyJSONParser {
         Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
             String fieldName = field.getName();
+            JSONProperty jsonProperty = field.getAnnotation(JSONProperty.class);
+            if (jsonProperty != null && !jsonProperty.name().isEmpty()) {
+                fieldName += "." + jsonProperty.name();
+            }
+
             if (jsonObject.containsKey(fieldName)) {
                 Object fieldValue = jsonObject.get(fieldName);
                 field.setAccessible(true);
