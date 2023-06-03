@@ -168,37 +168,4 @@ public class Examples {
             // Getters and setters
         }
     }
-
-    public static class Engine {
-        @JSONProperty
-        private String type;
-        @JSONProperty
-        private double displacement;
-
-        public Engine(String type, double displacement) {
-            this.type = type;
-            this.displacement = displacement;
-        }
-
-        public Engine(){
-            // Default constructor
-        }
-        // Getters and setters
-        public String getType() {
-            return type;
-        }
-
-        public void setType(String type) {
-            this.type = type;
-        }
-
-        public double getDisplacement() {
-            return displacement;
-        }
-
-        public void setDisplacement(double displacement) {
-            this.displacement = displacement;
-        }
-    }
-
 }
