@@ -85,6 +85,13 @@ public class ODMUserInterface {
         for (Class<?> declaredClass : declaredClasses) {
             if (declaredClass.getSimpleName().equals(className)) {
                 return declaredClass;
+            } else {
+                Class<?>[] nestedClasses = declaredClass.getDeclaredClasses();
+                for (Class<?> nestedClass : nestedClasses) {
+                    if (nestedClass.getSimpleName().equals(className)) {
+                        return nestedClass;
+                    }
+                }
             }
         }
         return null;
@@ -195,6 +202,7 @@ public class ODMUserInterface {
     private static void mapObjectToJSON (Object object){
         try {
             Class<?> clazz = object.getClass();
+            System.out.println(clazz.getName());
             Field[] fields = clazz.getDeclaredFields();
             for (Field field : fields) {
                 field.setAccessible(true); // Make the field accessible

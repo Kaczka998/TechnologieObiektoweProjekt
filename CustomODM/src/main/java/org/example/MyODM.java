@@ -2,11 +2,10 @@ package org.example;
 
 import java.lang.reflect.*;
 import java.util.*;
-import org.json.simple.*;
 
 public class MyODM {
 
-    public static Map<String, Object> toJsonMap(Object object) throws IllegalAccessException {
+    public static Map<String, Object> toJsonMap(Object object) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
         Map<String, Object> jsonMap = new HashMap<>();
         Field[] fields = object.getClass().getDeclaredFields();
         for (Field field : fields) {
@@ -51,30 +50,30 @@ public class MyODM {
             } else {
                 // handle objects
                 String nestedJson = toJSON(fieldValue);
-                jsonMap.put(fieldName, JSONValue.parse(nestedJson));
+                jsonMap.put(fieldName, MyJSONParser.fromJSON(nestedJson, fieldValue.getClass()));
             }
         }
         return jsonMap;
     }
-    public static String toJSON(Object object) throws IllegalAccessException {
-        String result = JSONValue.toJSONString(toJsonMap(object));
+    public static String toJSON(Object object) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
+        String result = JSONMapper.toJSONString(toJsonMap(object));
         return filterJSONString(result);
     }
 
-    public static String toJSON(List<?> objects) throws IllegalAccessException {
+    public static String toJSON(List<?> objects) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
         List<Map<String, Object>> jsonList = new ArrayList<>();
         for (Object object : objects) {
             jsonList.add(toJsonMap(object));
         }
-        return filterJSONString(JSONValue.toJSONString(jsonList));
+        return filterJSONString(JSONMapper.toJSONString(jsonList));
     }
 
-    private static String toJSON(Collection<?> collection) throws IllegalAccessException {
+    private static String toJSON(Collection<?> collection) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
         List<Object> list = new ArrayList<>();
         for (Object obj : collection) {
             list.add(toJSON(obj));
         }
-        return filterJSONString(JSONValue.toJSONString(list));
+        return filterJSONString(JSONMapper.toJSONString(list));
     }
 
     private static boolean isListOfObjects(Field field) {
