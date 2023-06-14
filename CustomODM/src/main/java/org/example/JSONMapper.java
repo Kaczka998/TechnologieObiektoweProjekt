@@ -2,14 +2,13 @@ package org.example;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.List;
-import java.util.Map;
 
 public class JSONMapper {
-    public static String toJSONString(Object object) throws NoSuchMethodException {
+    public static String toJSONString(Object object) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         Class<?> clazz = object.getClass();
         Field[] fields = clazz.getDeclaredFields();
-        System.out.println(clazz.getSimpleName());
         StringBuilder jsonString = new StringBuilder();
         jsonString.append("{");
         String json = "";
@@ -21,55 +20,53 @@ public class JSONMapper {
             json = jsonString.toString();
             json.substring(0, json.length() - 1);
         }
-        return json + "}";
+        return json.replaceAll(",$", "") + "}";
     }
 
-    public static String fieldtoJSONString(Field field, Object object) throws NoSuchMethodException {
-        System.out.println(field.getName() +" "+ field.getType());
-        Class<?> clazz = ODMUserInterface.findClass(field.getType().getSimpleName());
-        if(clazz!=null){
+    public static String fieldtoJSONString(Field field, Object object) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> fieldType = field.getType();
+
+        if (fieldType.isMemberClass() && Modifier.isStatic(fieldType.getModifiers())) {
+            field.setAccessible(true);
+            // Handle static inner classes separately
+            Object fieldObject = field.get(object);
+            return "\""+field.getName()+"\":" + toJSONString(fieldObject);
+        }
+
+        if (fieldType.isMemberClass() && !Modifier.isStatic(fieldType.getModifiers())) {
+            // Handle non-static inner classes
+            Object fieldObject;
             try {
-                System.out.println(clazz.getSimpleName());
-                Object fieldObject = clazz.getDeclaredConstructor().newInstance();
-                return toJSONString(fieldObject);
-            } catch (InvocationTargetException e) {
-                throw new RuntimeException(e);
-            } catch (InstantiationException e) {
-                throw new RuntimeException(e);
+                field.setAccessible(true);
+                fieldObject = field.get(object);
+                if (fieldObject != null) {
+                    return "\""+field.getName()+"\":" + toJSONString(fieldObject);
+                }
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
         }
+        // Handle regular fields
         StringBuilder jsonString = new StringBuilder();
+        field.setAccessible(true);
+        String fieldName = getFieldName(field);
+        Object fieldValue = getFieldValue(object, field);
 
-                field.setAccessible(true);
-                String fieldName = getFieldName(field);
-                Object fieldValue = getFieldValue(object, field);
+        jsonString.append("\"").append(fieldName).append("\":");
 
-                jsonString.append("\"").append(fieldName).append("\":");
-
-                if (fieldValue == null) {
-                    jsonString.append("null");
-                } else if (field.getType() == String.class) {
-                    jsonString.append("\"").append(fieldValue).append("\"");
-                } else if (field.getType() == Double.class) {
-                    jsonString.append(fieldValue);
-                } else if (field.getType().isPrimitive() || isWrapperType(field.getType())) {
-                    jsonString.append(fieldValue);
-                } else if (field.getType() == List.class) {
-                    jsonString.append(toJSONArray((List<?>) fieldValue));
-                } else {
-                    jsonString.append(toJSONString(fieldValue));
-                }
-        return jsonString.toString();
-    }
-
-    public static String toJSONString(Map<String, Object> objectMap) throws NoSuchMethodException {
-        String json = "";
-        for (String key : objectMap.keySet()) {
-            json += toJSONString(objectMap.get(key));
+        if (fieldValue == null) {
+            jsonString.append("null");
+        } else if (field.getType() == String.class) {
+            jsonString.append("\"").append(fieldValue).append("\"");
+        } else if (field.getType().isPrimitive() || isWrapperType(field.getType())) {
+            jsonString.append(fieldValue);
+        } else if (field.getType() == List.class) {
+            jsonString.append(toJSONArray((List<?>) fieldValue));
+        } else {
+            jsonString.append(toJSONString(fieldValue));
         }
-        return json;
+
+        return jsonString.toString();
     }
 
     private static Object getFieldValue(Object object, Field field) {
@@ -87,8 +84,18 @@ public class JSONMapper {
                 clazz == Double.class || clazz == Boolean.class || clazz == Character.class ||
                 clazz == Byte.class || clazz == Short.class;
     }
-
-    private static String toJSONArray(List<?> list) throws NoSuchMethodException {
+    private static String toJSONArray(List<?> list) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException { //źle obsługuje listy obiektów (adresy)
+        Class listItemClass = list.get(0).getClass(); // if listItemClass.getSimpleName() wywołane w findClass znajdzie klasę to jest to lista obiektów tej klasy, inaczj sprawdź jakit to typ, string czy numeryczny czy jak
+        Class customClass = Helper.findClass(listItemClass.getSimpleName());
+        if(customClass!=null){
+            String jsonArrayOfObjects = "";
+            for(Object item : list){
+                jsonArrayOfObjects += toJSONString(item); // próba ogarnięcia obsługi listy obiektów
+                jsonArrayOfObjects += ",";
+                jsonArrayOfObjects = jsonArrayOfObjects.substring(0, jsonArrayOfObjects.length() - 1);
+            }
+            return "[" + jsonArrayOfObjects + "]";
+        }
         StringBuilder jsonArray = new StringBuilder();
 
         for (int i = 0; i < list.size(); i++) {
@@ -108,11 +115,7 @@ public class JSONMapper {
                 jsonArray.append(",");
             }
         }
-        String json = jsonArray.toString();
-        json = json.substring(0, json.length() - 1);
-        json = json.substring(1);
-        json = json.substring(0, json.length() - 1);
-        return "[" + json + "]";
+        return "[" + jsonArray + "]";
     }
 
     private static String getFieldName(Field field) {
