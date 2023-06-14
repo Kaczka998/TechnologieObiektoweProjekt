@@ -1,22 +1,17 @@
 package org.example;
 
-import org.json.simple.parser.ParseException;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ODMUserInterface {
     private static final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    private static final MyJSONParser objectParser = new MyJSONParser();
-
-    private static final MyODM jsonParser = new MyODM();
-
+    private static final JSONParser objectParser = new JSONParser();
+    private static final JSONMapper jsonMapper = new JSONMapper();
     public static void run(){
         boolean quit = false;
 
@@ -63,12 +58,12 @@ public class ODMUserInterface {
         System.out.print("Enter the class name: ");
         String className = readUserInput();
 
-        Class<?> clazz = findClass(className);
+        Class<?> clazz = Helper.findClass(className);
         if (clazz != null) {
             Object object = null;
             try {
-                object = objectParser.fromJSON(jsonString, clazz);
-            } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
+                object = objectParser.fromJSON(jsonString, className);
+            } catch (Exception e){
                 System.out.println("Error mapping JSON to object: " + e.getMessage());
             }
             if (object != null) {
@@ -79,17 +74,6 @@ public class ODMUserInterface {
             System.out.println("Class not found: " + className);
         }
     }
-
-    private static Class<?> findClass(String className) {
-        Class<?>[] declaredClasses = Examples.class.getDeclaredClasses();
-        for (Class<?> declaredClass : declaredClasses) {
-            if (declaredClass.getSimpleName().equals(className)) {
-                return declaredClass;
-            }
-        }
-        return null;
-    }
-
     private static void displayObjectFields(Object object) {
         Field[] fields = object.getClass().getDeclaredFields();
         for (Field field : fields) {
@@ -101,7 +85,11 @@ public class ODMUserInterface {
                     System.out.println(field.getName() + " : ");
                     List<?> list = (List<?>) value;
                     for (Object listItem : list) {
-                        displayObjectFields(listItem);
+                        if (listItem instanceof String) {
+                            System.out.println(listItem);
+                        } else {
+                            displayObjectFields(listItem);
+                        }
                     }
                 } else if (value != null && value.getClass().getName().startsWith("org.example")) {
                     // Handle nested objects
@@ -115,14 +103,15 @@ public class ODMUserInterface {
             }
         }
     }
+
     private static void mapObjectToJSON() {
         System.out.print("Enter the class name: ");
         String className = readUserInput();
+        List<String> innerJSONs = new ArrayList<>();
 
-        Class<?> clazz = findClass(className);
+        Class<?> clazz = Helper.findClass(className);
         try {
             Object object = clazz.getDeclaredConstructor().newInstance();
-
             Field[] fields = clazz.getDeclaredFields();
             for (Field field : fields) {
                 field.setAccessible(true); // Make the field accessible
@@ -147,7 +136,7 @@ public class ODMUserInterface {
                             Field[] valueFields = listType.getDeclaredFields();
                             for (Field valueField : valueFields) {
                                 valueField.setAccessible(true); // Make the field accessible
-                                System.out.print("Provide values for " + valueField.getName() + " field (separately, expected data type: " + field.getType().getSimpleName() + "): ");
+                                System.out.print("Provide values for " + valueField.getName() + " field (separately, expected data type: " + valueField.getType().getSimpleName() + "): ");
                                 String userInput = readUserInput();
 
                                 // Set the value of the field in the value object
@@ -163,9 +152,6 @@ public class ODMUserInterface {
                     }
 
                     field.set(object, list);
-                } else if (field.getType().isArray()) {
-                    // Handle array fields
-                    // ...
                 } else if (field.getType().isPrimitive() || field.getType().equals(String.class)) {
                     System.out.print("Provide value for " + field.getName() + " field (expected data type: " + field.getType().getSimpleName() + "): ");
                     String userInput = readUserInput();
@@ -178,21 +164,21 @@ public class ODMUserInterface {
                     Object fieldObject = fieldType.getDeclaredConstructor().newInstance();
                     System.out.println(field.getName() + ": ");
                     // Recursively call mapObjectToJSON for the nested object
-                    mapObjectToJSON(fieldObject);
-
+                    if(fieldObject != null) {
+                        innerJSONs.add(mapObjectToJSON(fieldObject));
+                    }
                     // Set the value of the field in the object
                     field.set(object, fieldObject);
                 }
             }
-
-            String jsonString = jsonParser.toJSON(object);
+            String jsonString = jsonMapper.toJSONString(object);
             System.out.println("JSON mapped successfully:\n" + jsonString);
         } catch (Exception e) {
             System.out.println("Error mapping object to JSON: " + e.getMessage());
         }
     }
 
-    private static void mapObjectToJSON (Object object){
+    private static String mapObjectToJSON (Object object){
         try {
             Class<?> clazz = object.getClass();
             Field[] fields = clazz.getDeclaredFields();
@@ -257,11 +243,12 @@ public class ODMUserInterface {
                 }
             }
 
-            String jsonString = jsonParser.toJSON(object);
-            System.out.println("JSON mapped successfully:\n" + jsonString);
+            String jsonString = jsonMapper.toJSONString(object);
+            return jsonString;
         } catch (Exception e) {
-            System.out.println("Error mapping object to JSON: " + e.getMessage());
+            System.out.println("Error mapping inner object to JSON: " + e.getMessage());
         }
+        return "";
     }
     private static void setFieldValue(Object object, Field field, String value) throws IllegalAccessException {
         Class<?> fieldType = field.getType();

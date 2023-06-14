@@ -1,7 +1,9 @@
 package org.example;
 
 import java.util.List;
+import org.example.JSONProperty;
 public class Examples {
+
     public static class Car {
         @JSONProperty
         private String make;
@@ -67,7 +69,9 @@ public class Examples {
         }
 
         public static class Engine {
+            @JSONProperty
             private String type;
+            @JSONProperty
             private double displacement;
 
             public Engine(String type, double displacement) {
@@ -109,13 +113,26 @@ public class Examples {
             return this.name;
         }
 
+        public void setName(String name) {
+            this.name = name;
+        }
+
         public int getAge() {
             return this.age;
+        }
+
+        public void setAge(Integer age) {
+            this.age = age;
         }
 
         public List<Address> getAddresses() {
             return this.addresses;
         }
+
+        public void setAddresses(List<Address> addresses) {
+            this.addresses = addresses;
+        }
+
         public Person() {
         }
 
@@ -139,17 +156,34 @@ public class Examples {
                 return this.street;
             }
 
+            public void setStreet(String street) {
+                this.street = street;
+            }
+
             public String getCity() {
                 return this.city;
+            }
+
+            public void setCity(String city) {
+                this.city = city;
             }
 
             public String getState() {
                 return this.state;
             }
 
+            public void setState(String state) {
+                this.state = state;
+            }
+
             public String getPostalCode() {
                 return this.postalCode;
             }
+
+            public void setPostalCode(String postalCode) {
+                this.postalCode = postalCode;
+            }
+
             public Address(){
 
             }
