@@ -6,23 +6,26 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 
 public class JSONMapper {
+    //This method adds "{" and "}" and the ends of json and between calls in a loop over object's fields mapping for all
+    // fields on object to json Strings. It gets field list from object parsed through parameter with reflection.
     public static String toJSONString(Object object) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         Class<?> clazz = object.getClass();
         Field[] fields = clazz.getDeclaredFields();
         StringBuilder jsonString = new StringBuilder();
-        jsonString.append("{");
+        jsonString.append("{"); //starts json with "{".
         String json = "";
         for (Field field : fields) {
-            if (field.isAnnotationPresent(JSONProperty.class)) {
-                jsonString.append(fieldtoJSONString(field, object));
-                jsonString.append(",");
+            if (field.isAnnotationPresent(JSONProperty.class)) { //checking if field is annotated, if not it is ignored.
+                jsonString.append(fieldtoJSONString(field, object)); //calling method that identifies field type and parses it to json.
+                jsonString.append(","); //separating fields
             }
             json = jsonString.toString();
             json.substring(0, json.length() - 1);
         }
-        return json.replaceAll(",$", "") + "}";
+        return json.replaceAll(",$", "") + "}";//cut last "," and closes json with "}".
     }
 
+    //This method identifies type of field and handles it based on it's type.
     public static String fieldtoJSONString(Field field, Object object) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         Class<?> fieldType = field.getType();
 
@@ -69,6 +72,7 @@ public class JSONMapper {
         return jsonString.toString();
     }
 
+    //Method for retrieving field value from object.
     private static Object getFieldValue(Object object, Field field) {
         try {
             field.setAccessible(true);
@@ -84,13 +88,16 @@ public class JSONMapper {
                 clazz == Double.class || clazz == Boolean.class || clazz == Character.class ||
                 clazz == Byte.class || clazz == Short.class;
     }
-    private static String toJSONArray(List<?> list) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException { //źle obsługuje listy obiektów (adresy)
-        Class listItemClass = list.get(0).getClass(); // if listItemClass.getSimpleName() wywołane w findClass znajdzie klasę to jest to lista obiektów tej klasy, inaczj sprawdź jakit to typ, string czy numeryczny czy jak
+
+
+    //Method for handling arrays with adding "[" and "]" to them.
+    private static String toJSONArray(List<?> list) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class listItemClass = list.get(0).getClass();
         Class customClass = Helper.findClass(listItemClass.getSimpleName());
         if(customClass!=null){
             String jsonArrayOfObjects = "";
             for(Object item : list){
-                jsonArrayOfObjects += toJSONString(item); // próba ogarnięcia obsługi listy obiektów
+                jsonArrayOfObjects += toJSONString(item);
                 jsonArrayOfObjects += ",";
                 jsonArrayOfObjects = jsonArrayOfObjects.substring(0, jsonArrayOfObjects.length() - 1);
             }
@@ -118,6 +125,7 @@ public class JSONMapper {
         return "[" + jsonArray + "]";
     }
 
+    //Method for retrieving name of the field. It also checks if there is custom name put in annotation to use instead of field name.
     private static String getFieldName(Field field) {
         JSONProperty annotation = field.getAnnotation(JSONProperty.class);
         if (annotation != null && !annotation.name().isEmpty()) {

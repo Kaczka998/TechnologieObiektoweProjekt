@@ -2,6 +2,7 @@ package org.example;
 
 import java.util.List;
 import org.example.JSONProperty;
+//Class holding example custom classes used for testing Mapper and Parser.
 public class Examples {
 
     public static class Car {

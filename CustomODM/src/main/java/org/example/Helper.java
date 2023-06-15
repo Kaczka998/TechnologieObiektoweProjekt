@@ -2,6 +2,8 @@ package org.example;
 
 public class Helper {
 
+    //Method that checks if className is a name of custom class predefined by user. In this specific scenario
+    //it checks only Examples.java for classes, but it can be modified or class file name can be parameterized.
     public static Class<?> findClass(String className) {
         Class<?>[] declaredClasses = Examples.class.getDeclaredClasses();
         for (Class<?> declaredClass : declaredClasses) {
@@ -19,6 +21,7 @@ public class Helper {
         return null;
     }
 
+    //Method for simply modifying string to start with upper case letter.
     public static String capitalize(String input) {
         if (input == null || input.isEmpty()) {
             return input;

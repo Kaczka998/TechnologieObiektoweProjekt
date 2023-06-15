@@ -6,6 +6,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class JSONParser {
+    //This method takes a json string and name of class to map it to, then checks field types and for each calls
+    //proper private method handling it's data type. Then uses setters to acces private fields on object and set
+    //field values read from json.
     public static <T> T fromJSON(String json, String className) {
         try {
             Class<?> clazz = Helper.findClass(className);
@@ -16,7 +19,6 @@ public class JSONParser {
                     ParameterizedType parameterizedType = (ParameterizedType) field.getGenericType();
                     Type[] typeArguments = parameterizedType.getActualTypeArguments();
                     if (typeArguments.length == 1 && typeArguments[0] == String.class) {
-                        System.out.println("Jest listą: " + field.getName());
                         try {
                             Method setter = object.getClass().getMethod("set" + Helper.capitalize(field.getName()), List.class);
                             setter.invoke(object, listStringFromJson(json, field));
@@ -46,7 +48,6 @@ public class JSONParser {
                         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                             e.printStackTrace();
                         }
-                   // field.set(object, stringFromJson(json, field));
                 } else {
                     // Handle custom class type
                     try {
@@ -72,6 +73,7 @@ public class JSONParser {
         }
     }
 
+    //Method handling lists, inclusing lists of inner objects, f.e. list of  addresses of type Address on Person object.
     private static <T> List<T> listFromJson(String json, Field field) {
         String fieldName = field.getName();
         String pattern = "\"" + fieldName + "\":\\[([^\\]]+)\\]";
@@ -84,7 +86,7 @@ public class JSONParser {
             List<T> valuesList = new ArrayList<>();
 
             for (String objectString : objectStrings) {
-                if (objectString.startsWith("{") || objectString.endsWith("}")) {
+                if (objectString.startsWith("{") || objectString.endsWith("}")) { // then it is list of objects
                     String genericTypeName = field.getGenericType().getTypeName();
                     String simpleClassName = genericTypeName.substring(genericTypeName.lastIndexOf('.') + 1)
                             .replaceAll("[<>]", "");
@@ -92,7 +94,6 @@ public class JSONParser {
                         simpleClassName = simpleClassName.substring(simpleClassName.lastIndexOf('$') + 1);
                     }
                     if (Helper.findClass(simpleClassName) != null) {
-                        System.out.println("address: " + objectString);
                         T mappedObject = fromJSON(objectString, simpleClassName);
                         valuesList.add(mappedObject);
                     }
@@ -101,13 +102,13 @@ public class JSONParser {
                     valuesList.add((T) cleanedValue);
                 }
             }
-
             return valuesList;
         }
 
         return null;
     }
 
+    //Method for handling specifically lists of Strings
     private static List<String> listStringFromJson (String json, Field field){
         String fieldName = field.getName();
         String pattern = "\""+fieldName+"\":\\[([^\\]]+)\\]";
@@ -128,6 +129,7 @@ public class JSONParser {
         return null;
     }
 
+    //Method handling numeric types such as int, double, float etc.
     private static Number numberFromJson(String json, Field field, Class<? extends Number> type) {
         field.setAccessible(true);
         String fieldName = field.getName();
@@ -153,6 +155,7 @@ public class JSONParser {
         return null;
     }
 
+    //Method handling single String values
     private static String stringFromJson (String json, Field field){
         String fieldName = field.getName();
 

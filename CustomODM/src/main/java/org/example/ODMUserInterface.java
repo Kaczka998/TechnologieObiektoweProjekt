@@ -10,9 +10,10 @@ import java.util.List;
 
 public class ODMUserInterface {
     private static final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    private static final JSONParser objectParser = new JSONParser();
+    private static final JSONParser jsonParser = new JSONParser();
     private static final JSONMapper jsonMapper = new JSONMapper();
-    public static void run(){
+
+    public static void run() {
         boolean quit = false;
 
         while (!quit) {
@@ -34,6 +35,7 @@ public class ODMUserInterface {
             }
         }
     }
+
     private static void printMenu() {
         System.out.println("=== Object Mapper Menu ===");
         System.out.println("1. Map JSON to Object");
@@ -51,6 +53,7 @@ public class ODMUserInterface {
         return "";
     }
 
+    // This method comunicates with user and takes required input, then calls method from JSONParser class.
     private static void mapJSONToObject() {
         System.out.print("Enter the JSON string: ");
         String jsonString = readUserInput();
@@ -62,8 +65,8 @@ public class ODMUserInterface {
         if (clazz != null) {
             Object object = null;
             try {
-                object = objectParser.fromJSON(jsonString, className);
-            } catch (Exception e){
+                object = jsonParser.fromJSON(jsonString, className);
+            } catch (Exception e) {
                 System.out.println("Error mapping JSON to object: " + e.getMessage());
             }
             if (object != null) {
@@ -74,6 +77,8 @@ public class ODMUserInterface {
             System.out.println("Class not found: " + className);
         }
     }
+
+    // This method display objects mapped from JSON showing all fields with names and values.
     private static void displayObjectFields(Object object) {
         Field[] fields = object.getClass().getDeclaredFields();
         for (Field field : fields) {
@@ -104,6 +109,9 @@ public class ODMUserInterface {
         }
     }
 
+    // This method comunicates with user and takes required input, then calls method from JSONMapper class.
+    // It takes Class name from user and then reads what fields it need. It takes values for those fields from user,
+    // creates object and send it as parameter to jsonMapper.toJSONString() method.
     private static void mapObjectToJSON() {
         System.out.print("Enter the class name: ");
         String className = readUserInput();
@@ -127,13 +135,14 @@ public class ODMUserInterface {
                         Object valueObject = null;
 
                         if (listType == String.class) {
-                            System.out.print("Provide value for " + field.getName() + " field: (separately, expected data type: " + field.getType().getSimpleName() + "): ");
+                            System.out.print("Provide value for " + field.getName() + " field: (separately, expected data type: " + listType.getSimpleName() + "): ");
                             String userInput = readUserInput();
                             valueObject = userInput;
                         } else {
+                            System.out.println(field.getName() + ": ");
                             valueObject = listType.getDeclaredConstructor().newInstance();
 
-                            Field[] valueFields = listType.getDeclaredFields();
+                            Field[] valueFields = valueObject.getClass().getDeclaredFields();
                             for (Field valueField : valueFields) {
                                 valueField.setAccessible(true); // Make the field accessible
                                 System.out.print("Provide values for " + valueField.getName() + " field (separately, expected data type: " + valueField.getType().getSimpleName() + "): ");
@@ -164,7 +173,7 @@ public class ODMUserInterface {
                     Object fieldObject = fieldType.getDeclaredConstructor().newInstance();
                     System.out.println(field.getName() + ": ");
                     // Recursively call mapObjectToJSON for the nested object
-                    if(fieldObject != null) {
+                    if (fieldObject != null) {
                         innerJSONs.add(mapObjectToJSON(fieldObject));
                     }
                     // Set the value of the field in the object
@@ -178,7 +187,9 @@ public class ODMUserInterface {
         }
     }
 
-    private static String mapObjectToJSON (Object object){
+    //method similar to one above but it takes an object as parameter and handles inner objects reading required values
+    //from user. F.e. Engine object in a Car object.
+    private static String mapObjectToJSON(Object object) {
         try {
             Class<?> clazz = object.getClass();
             Field[] fields = clazz.getDeclaredFields();
@@ -193,7 +204,7 @@ public class ODMUserInterface {
                     boolean hasMoreValues = true;
 
                     while (hasMoreValues) {
-                        Object valueObject = null;
+                        Object valueObject;
 
                         if (listType == String.class) {
                             System.out.print("Provide value for " + field.getName() + " field (expected data type: " + field.getType().getSimpleName() + ": ");
@@ -205,7 +216,7 @@ public class ODMUserInterface {
                             Field[] valueFields = listType.getDeclaredFields();
                             for (Field valueField : valueFields) {
                                 valueField.setAccessible(true); // Make the field accessible
-                                System.out.print("Provide values for " + valueField.getName() + " field (separately, expected data type: " + field.getType().getSimpleName()+"): ");
+                                System.out.print("Provide values for " + valueField.getName() + " field (separately, expected data type: " + field.getType().getSimpleName() + "): ");
                                 String userInput = readUserInput();
 
                                 // Set the value of the field in the value object
@@ -250,6 +261,7 @@ public class ODMUserInterface {
         }
         return "";
     }
+
     private static void setFieldValue(Object object, Field field, String value) throws IllegalAccessException {
         Class<?> fieldType = field.getType();
 
@@ -263,7 +275,6 @@ public class ODMUserInterface {
             field.set(object, Boolean.parseBoolean(value));
         } else {
             // Handle other types as needed
-            // You can add additional type checks and conversions here for different field types
         }
     }
 }
