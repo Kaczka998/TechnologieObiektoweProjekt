@@ -24,7 +24,7 @@ While application is running you can see simple menu:
         3. Quit
         Enter your choice: 
 
-        Scenario 1: Enter "1".
+   Scenario 1: Enter "1".
 1. You are asked for json String, f.e. for Car class it will look like: {"make":"Toyota","model":"Yaris","year":2014,"features":["AC","electric mirror"],"engine":{"type":"diesel","displacement":1.2}}
 2. Then you are asked for a name of class you want to parse the JSON to. If you provide uncompatible class name then you get error message and are return to the menu. If you provided JSON like above and class name
   as "Car" you should get output looking like:
@@ -43,7 +43,7 @@ While application is running you can see simple menu:
    
 3. You are returned to the menu.
    
-        Scenario 2: Enter "2".
+   Scenario 2: Enter "2".
 1. You are asked for name of class wchich type object you want to map. F.e. you enter "Person".
 2. You are asked to enter value for every field expected on Person object to dynamically create Person object. It has information what data type is expected, if you provide uncompatible data type you get error message and   return to the menu.
 3. If you provide proper values you get JSON string in response, example:
