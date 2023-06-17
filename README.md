@@ -12,17 +12,19 @@ This is a simple Java console application that demonstrates JSON-to-Object and O
 Alternatively, you can run this application in cmd, but it requires to have Maven installed on your PC (as Intellij has Maven built in).
 
 
-## How to Use.
+## How to Use
 
 This application has 2 classes predefined for testing purposes. You can find them in Examples.java. Both of them have inner classes - Car has field engine type Engine and Person has field addresses type List<Address>.
 
 While application is running you can see simple menu:
+
         === Object Mapper Menu ===
         1. Map JSON to Object
         2. Map Object to JSON
         3. Quit
         Enter your choice: 
-  Scenario 1: Enter "1".
+
+        Scenario 1: Enter "1".
 1. You are asked for json String, f.e. for Car class it will look like: {"make":"Toyota","model":"Yaris","year":2014,"features":["AC","electric mirror"],"engine":{"type":"diesel","displacement":1.2}}
 2. Then you are asked for a name of class you want to parse the JSON to. If you provide uncompatible class name then you get error message and are return to the menu. If you provided JSON like above and class name
   as "Car" you should get output looking like:
@@ -41,7 +43,7 @@ While application is running you can see simple menu:
    
 3. You are returned to the menu.
    
-  Scenario 2: Enter "2".
+        Scenario 2: Enter "2".
 1. You are asked for name of class wchich type object you want to map. F.e. you enter "Person".
 2. You are asked to enter value for every field expected on Person object to dynamically create Person object. It has information what data type is expected, if you provide uncompatible data type you get error message and   return to the menu.
 3. If you provide proper values you get JSON string in response, example:
@@ -67,6 +69,6 @@ The application stops.
 
 In any other scenario there will show information "Invalid choice. Please try again." and you will return to menu.
 
-## Customization.
+## Customization
 
 Most important information about the code is written in code itself with explanation comments. If you would like to use this ODM for mapping your custom objects you have to either put it into Examples.java or mofidy Helper.findClass() method to look for classes also outside of Examples.java.
